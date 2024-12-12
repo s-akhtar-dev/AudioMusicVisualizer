@@ -1,4 +1,8 @@
 /** @type {import('next').NextConfig} */
-const nextConfig = {};
-
-export default nextConfig;
+const nextConfig = {
+    reactStrictMode: true,
+    // Explicitly tell Next.js to handle client-side components
+    serverComponentsExternalPackages: ['']
+  };
+  
+  export default nextConfig;
