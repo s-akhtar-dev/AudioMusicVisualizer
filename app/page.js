@@ -8,8 +8,9 @@ const App = () => {
   const analyzerNode = useRef(null);
 
   useEffect(() => {
-    // Initialize Audio Context and Analyzer Node
+    let animationId; // To cancel animation if needed
     if (typeof window !== "undefined") {
+      // Initialize Audio Context and Analyzer Node
       audioContext.current = new (window.AudioContext || window.webkitAudioContext)();
       analyzerNode.current = audioContext.current.createAnalyser();
 
@@ -25,6 +26,12 @@ const App = () => {
         })
         .catch((err) => console.error("Error accessing audio devices:", err));
     }
+
+    // Clean up on unmount
+    return () => {
+      if (animationId) cancelAnimationFrame(animationId);
+      if (audioContext.current) audioContext.current.close();
+    };
   }, []);
 
   const visualize = () => {
@@ -34,6 +41,9 @@ const App = () => {
     const dataArray = new Uint8Array(bufferLength);
 
     const draw = () => {
+      const canvas = canvasRef.current;
+      if (!canvas) return; // Ensure canvas exists
+
       requestAnimationFrame(draw);
       analyzerNode.current.getByteFrequencyData(dataArray); // Get frequency data
 
@@ -106,18 +116,18 @@ const App = () => {
   };
 
   return (
-    <div style={{
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          justifyContent: "center",
-          height: "100vh",
-          background: "linear-gradient(135deg,rgb(56, 56, 56),rgb(0, 0, 0))",
-          color: "white"
-        }}>
-      <h1 style={{ textShadow: "2px 2px 4px rgba(0, 0, 0, 0.7)" }}>
-        Audio Music Visualizer
-      </h1>
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+        height: "100vh",
+        background: "linear-gradient(135deg,rgb(56, 56, 56),rgb(0, 0, 0))",
+        color: "white",
+      }}
+    >
+      <h1 style={{ textShadow: "2px 2px 4px rgba(0, 0, 0, 0.7)" }}>Audio Music Visualizer</h1>
       <canvas
         ref={canvasRef}
         width={800}
@@ -126,7 +136,7 @@ const App = () => {
           border: "2px solid #fff",
           borderRadius: "50%",
           marginTop: "20px",
-          boxShadow: "0px 0px 20px rgba(255,255,255,0.5)"
+          boxShadow: "0px 0px 20px rgba(255,255,255,0.5)",
         }}
       ></canvas>
     </div>
