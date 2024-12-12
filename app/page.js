@@ -100,9 +100,17 @@ const App = () => {
   };
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
-      <h1 style={{ color: "white", textShadow: "2px 2px 4px rgba(0, 0, 0, 0.7)" }}>
-        Circular Music Visualizer
+    <div style={{
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center",
+          height: "100vh",
+          background: "linear-gradient(135deg,rgb(56, 56, 56),rgb(0, 0, 0))",
+          color: "white"
+        }}>
+      <h1 style={{ textShadow: "2px 2px 4px rgba(0, 0, 0, 0.7)" }}>
+        Audio Music Visualizer
       </h1>
       <canvas
         ref={canvasRef}
@@ -112,6 +120,7 @@ const App = () => {
           border: "2px solid #fff",
           borderRadius: "50%",
           marginTop: "20px",
+          boxShadow: "0px 0px 20px rgba(255,255,255,0.5)"
         }}
       ></canvas>
     </div>
