@@ -4,20 +4,27 @@ import React, { useEffect, useRef } from "react";
 
 const App = () => {
   const canvasRef = useRef(null);
-  const audioContext = useRef(new (window.AudioContext || window.webkitAudioContext)());
-  const analyzerNode = useRef(audioContext.current.createAnalyser());
+  const audioContext = useRef(null);
+  const analyzerNode = useRef(null);
 
   useEffect(() => {
-    navigator.mediaDevices
-      .getUserMedia({ audio: true })
-      .then((stream) => {
-        const source = audioContext.current.createMediaStreamSource(stream);
-        source.connect(analyzerNode.current);
+    // Initialize Audio Context and Analyzer Node
+    if (typeof window !== "undefined") {
+      audioContext.current = new (window.AudioContext || window.webkitAudioContext)();
+      analyzerNode.current = audioContext.current.createAnalyser();
 
-        analyzerNode.current.fftSize = 1024;
-        visualize();
-      })
-      .catch((err) => console.error("Error accessing audio devices:", err));
+      // Request access to the microphone
+      navigator.mediaDevices
+        .getUserMedia({ audio: true })
+        .then((stream) => {
+          const source = audioContext.current.createMediaStreamSource(stream);
+          source.connect(analyzerNode.current);
+
+          analyzerNode.current.fftSize = 1024; // Set FFT size for frequency analysis
+          visualize(); // Start visualizing the audio
+        })
+        .catch((err) => console.error("Error accessing audio devices:", err));
+    }
   }, []);
 
   const visualize = () => {
@@ -28,10 +35,9 @@ const App = () => {
 
     const draw = () => {
       requestAnimationFrame(draw);
+      analyzerNode.current.getByteFrequencyData(dataArray); // Get frequency data
 
-      analyzerNode.current.getByteFrequencyData(dataArray);
-
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.clearRect(0, 0, canvas.width, canvas.height); // Clear the canvas
 
       // Center coordinates and circle radius
       const centerX = canvas.width / 2;
@@ -58,12 +64,12 @@ const App = () => {
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
       // Draw bars in a circle
-      const barCount = bufferLength / 2;
+      const barCount = bufferLength / 2; // Reduce bar count for better visualization
       const barWidth = 2;
 
       for (let i = 0; i < barCount; i++) {
-        const angle = (i / barCount) * Math.PI * 2;
-        const barHeight = dataArray[i] * 1.5;
+        const angle = (i / barCount) * Math.PI * 2; // Calculate angle for each bar
+        const barHeight = dataArray[i] * 1.5; // Scale the height of the bars
 
         // Calculate start and end points for bars
         const xStart = centerX + Math.cos(angle) * dynamicRadius;
@@ -96,7 +102,7 @@ const App = () => {
       ctx.stroke();
     };
 
-    draw();
+    draw(); // Start the drawing loop
   };
 
   return (
