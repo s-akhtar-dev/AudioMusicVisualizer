@@ -1,4 +1,4 @@
-"use client"; // Mark this file as a client component
+"use client";
 
 import React, { useEffect, useRef } from "react";
 
