@@ -14,7 +14,7 @@ const App = () => {
         const source = audioContext.current.createMediaStreamSource(stream);
         source.connect(analyzerNode.current);
 
-        analyzerNode.current.fftSize = 2048;
+        analyzerNode.current.fftSize = 1024;
         visualize();
       })
       .catch((err) => console.error("Error accessing audio devices:", err));
@@ -33,35 +33,67 @@ const App = () => {
 
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-      // Create gradient background
-      const gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
-      gradient.addColorStop(0, "#0f2027");
-      gradient.addColorStop(0.5, "#203a43");
-      gradient.addColorStop(1, "#2c5364");
+      // Center coordinates and circle radius
+      const centerX = canvas.width / 2;
+      const centerY = canvas.height / 2;
+      const radius = 150;
 
+      // Circle bouncing based on volume
+      const volume = dataArray.reduce((acc, val) => acc + val, 0) / bufferLength;
+      const dynamicRadius = radius + volume / 20;
+
+      // Draw background gradient
+      const gradient = ctx.createRadialGradient(
+        centerX,
+        centerY,
+        dynamicRadius / 2,
+        centerX,
+        centerY,
+        dynamicRadius * 2
+      );
+      gradient.addColorStop(0, "#1e3c72");
+      gradient.addColorStop(0.5, "#2a5298");
+      gradient.addColorStop(1, "#1c1c1c");
       ctx.fillStyle = gradient;
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-      const barWidth = (canvas.width / bufferLength) * 1.5;
-      let x = 0;
+      // Draw bars in a circle
+      const barCount = bufferLength / 2;
+      const barWidth = 2;
 
-      for (let i = 0; i < bufferLength; i++) {
+      for (let i = 0; i < barCount; i++) {
+        const angle = (i / barCount) * Math.PI * 2;
         const barHeight = dataArray[i] * 1.5;
 
-        // Dynamic colors based on bar height
-        const red = (barHeight + 25) * 2;
-        const green = 250 - barHeight;
-        const blue = 150 + barHeight;
+        // Calculate start and end points for bars
+        const xStart = centerX + Math.cos(angle) * dynamicRadius;
+        const yStart = centerY + Math.sin(angle) * dynamicRadius;
+        const xEnd = centerX + Math.cos(angle) * (dynamicRadius + barHeight);
+        const yEnd = centerY + Math.sin(angle) * (dynamicRadius + barHeight);
 
-        ctx.fillStyle = `rgb(${red}, ${green}, ${blue})`;
-        ctx.fillRect(x, canvas.height - barHeight, barWidth, barHeight);
+        // Dynamic colors for different parts
+        const red = Math.sin(angle * 2) * 128 + 127;
+        const green = Math.cos(angle * 3) * 128 + 127;
+        const blue = Math.sin(angle * 5) * 128 + 127;
 
-        // Add glow effect
-        ctx.shadowBlur = 20;
-        ctx.shadowColor = `rgb(${red}, ${green}, ${blue})`;
+        ctx.strokeStyle = `rgb(${Math.floor(red)}, ${Math.floor(green)}, ${Math.floor(blue)})`;
+        ctx.lineWidth = barWidth;
 
-        x += barWidth + 2;
+        // Draw the bar
+        ctx.beginPath();
+        ctx.moveTo(xStart, yStart);
+        ctx.lineTo(xEnd, yEnd);
+        ctx.stroke();
       }
+
+      // Draw the dynamic circle
+      ctx.beginPath();
+      ctx.arc(centerX, centerY, dynamicRadius, 0, Math.PI * 2);
+      ctx.fillStyle = "rgba(255, 255, 255, 0.1)";
+      ctx.fill();
+      ctx.strokeStyle = "rgba(255, 255, 255, 0.5)";
+      ctx.lineWidth = 2;
+      ctx.stroke();
     };
 
     draw();
@@ -70,15 +102,15 @@ const App = () => {
   return (
     <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
       <h1 style={{ color: "white", textShadow: "2px 2px 4px rgba(0, 0, 0, 0.7)" }}>
-        Dynamic Music Visualizer
+        Circular Music Visualizer
       </h1>
       <canvas
         ref={canvasRef}
-        width={1000}
-        height={500}
+        width={800}
+        height={800}
         style={{
           border: "2px solid #fff",
-          borderRadius: "15px",
+          borderRadius: "50%",
           marginTop: "20px",
         }}
       ></canvas>
